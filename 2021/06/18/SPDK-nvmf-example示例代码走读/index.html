@@ -20,23 +20,28 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
 
 <script class="next-config" data-name="main" type="application/json">{"hostname":"meinhardzh.github.io","root":"/project/","images":"/project/images","scheme":"Pisces","version":"8.5.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}}</script><script src="/project/js/config.js"></script>
-<meta property="og:type" content="website">
-<meta property="og:title" content="Code Road">
-<meta property="og:url" content="https://meinhardzh.github.io/project/index.html">
+<meta name="description" content="预配置环境 初始化 spdk_env_opts_init() ，解析arg参数到 opts中 12345678910111213141516&#x2F;&#x2F; opts 初始化列表[有SPDK 默认值的，在spdk_env_opts_init 中初始化]name &#x3D; nvmf_example-m core_mask-i shm_id 			shared memory ID(optional)-s mem_siz">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SPDK nvmf example示例代码走读">
+<meta property="og:url" content="https://meinhardzh.github.io/project/2021/06/18/SPDK-nvmf-example%E7%A4%BA%E4%BE%8B%E4%BB%A3%E7%A0%81%E8%B5%B0%E8%AF%BB/index.html">
 <meta property="og:site_name" content="Code Road">
+<meta property="og:description" content="预配置环境 初始化 spdk_env_opts_init() ，解析arg参数到 opts中 12345678910111213141516&#x2F;&#x2F; opts 初始化列表[有SPDK 默认值的，在spdk_env_opts_init 中初始化]name &#x3D; nvmf_example-m core_mask-i shm_id 			shared memory ID(optional)-s mem_siz">
 <meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2021-06-18T08:46:34.000Z">
+<meta property="article:modified_time" content="2021-06-18T08:55:04.406Z">
 <meta property="article:author" content="Meinhard_Zh">
+<meta property="article:tag" content="SPDK">
 <meta name="twitter:card" content="summary">
 
 
-<link rel="canonical" href="https://meinhardzh.github.io/project/">
+<link rel="canonical" href="https://meinhardzh.github.io/project/2021/06/18/SPDK-nvmf-example%E7%A4%BA%E4%BE%8B%E4%BB%A3%E7%A0%81%E8%B5%B0%E8%AF%BB/">
 
 
 
-<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":true,"isPost":false,"lang":"en","comments":"","permalink":"","path":"index.html","title":""}</script>
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"en","comments":true,"permalink":"https://meinhardzh.github.io/project/2021/06/18/SPDK-nvmf-example%E7%A4%BA%E4%BE%8B%E4%BB%A3%E7%A0%81%E8%B5%B0%E8%AF%BB/","path":"2021/06/18/SPDK-nvmf-example示例代码走读/","title":"SPDK nvmf example示例代码走读"}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">""</script>
-<title>Code Road</title>
+<title>SPDK nvmf example示例代码走读 | Code Road</title>
   
 
 
@@ -90,7 +95,7 @@
 
   <aside class="sidebar">
 
-    <div class="sidebar-inner sidebar-overview-active">
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
       <ul class="sidebar-nav">
         <li class="sidebar-nav-toc">
           Table of Contents
@@ -103,6 +108,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%A2%84%E9%85%8D%E7%BD%AE%E7%8E%AF%E5%A2%83"><span class="nav-number">1.</span> <span class="nav-text">预配置环境</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%9D%E5%A7%8B%E5%8C%96-thread"><span class="nav-number">2.</span> <span class="nav-text">初始化 thread</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8-program"><span class="nav-number">3.</span> <span class="nav-text">启动 program</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#nvmf-target-%E7%8A%B6%E6%80%81%E6%9C%BA%E8%AF%A6%E8%A7%A3"><span class="nav-number">4.</span> <span class="nav-text">nvmf target 状态机详解</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link"><span class="nav-number"></span> <span class="nav-text"></span></a></div>
         </div>
         <!--/noindex-->
 
@@ -153,16 +159,17 @@
 </noscript>
 
 
-    <div class="main-inner index posts-expand">
+    <div class="main-inner post posts-expand">
 
-    
+
+  
 
 
 <div class="post-block">
   
   
 
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
     <link itemprop="mainEntityOfPage" href="https://meinhardzh.github.io/project/2021/06/18/SPDK-nvmf-example%E7%A4%BA%E4%BE%8B%E4%BB%A3%E7%A0%81%E8%B5%B0%E8%AF%BB/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -175,9 +182,9 @@
       <meta itemprop="name" content="Code Road">
     </span>
       <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/project/2021/06/18/SPDK-nvmf-example%E7%A4%BA%E4%BE%8B%E4%BB%A3%E7%A0%81%E8%B5%B0%E8%AF%BB/" class="post-title-link" itemprop="url">SPDK nvmf example示例代码走读</a>
-        </h2>
+        <h1 class="post-title" itemprop="name headline">
+          SPDK nvmf example示例代码走读
+        </h1>
 
         <div class="post-meta-container">
           <div class="post-meta">
@@ -210,7 +217,7 @@
     
     
     <div class="post-body" itemprop="articleBody">
-          <h4 id="预配置环境"><a href="#预配置环境" class="headerlink" title="预配置环境"></a><strong>预配置环境</strong></h4><ul>
+        <h4 id="预配置环境"><a href="#预配置环境" class="headerlink" title="预配置环境"></a><strong>预配置环境</strong></h4><ul>
 <li><p>初始化 <strong>spdk_env_opts_init()</strong> ，解析arg参数到 opts中</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// opts 初始化列表</span></span><br><span class="line">[有SPDK 默认值的，在spdk_env_opts_init 中初始化]</span><br><span class="line">name = nvmf_example</span><br><span class="line">-m core_mask</span><br><span class="line">-i shm_id 			shared memory ID(optional)</span><br><span class="line">-s mem_size			memory size in MB <span class="keyword">for</span> DPDK (<span class="string">&quot;0MB&quot;</span>)</span><br><span class="line">master_core</span><br><span class="line">mem_channel</span><br><span class="line"></span><br><span class="line">[没有在 init 里初始化]</span><br><span class="line">-u disable PCI access</span><br><span class="line">  </span><br><span class="line">-n max_subsystems (<span class="string">&quot;32&quot;</span>)</span><br><span class="line">-p acceptor poller rate in us (<span class="string">&quot;10000us&quot;</span>)</span><br><span class="line">-r RPC listen address (<span class="string">&quot;var/tmp/spdk.sock&quot;</span>)</span><br><span class="line"></span><br></pre></td></tr></table></figure></li>
 <li><p>使用 opts 初始化环境 <strong>spdk_env_init()</strong></p>
@@ -418,7 +425,6 @@
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">spdk_subsystem_fini</span><span class="params">(spdk_msg_fb cb_fn, <span class="keyword">void</span> *cb_arg)</span></span></span><br></pre></td></tr></table></figure></li>
 </ol>
 <h3 id=""><a href="#" class="headerlink" title=""></a></h3>
-      
     </div>
 
     
@@ -426,11 +432,16 @@
     
 
     <footer class="post-footer">
-        <div class="post-eof"></div>
-      
+          <div class="post-tags">
+              <a href="/project/tags/SPDK/" rel="tag"># SPDK</a>
+          </div>
+
+        
+
     </footer>
   </article>
 </div>
+
 
 
 
